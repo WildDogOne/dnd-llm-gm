@@ -33,9 +33,9 @@ class OllamaClient:
     """
 
     @_retry
-    def chat(self, messages: List[Dict[str, Any]], stream: bool=False) -> Any:
+    def chat(self, messages: List[Dict[str, Any]], stream: bool=False, options: dict=None, format=None) -> Any:
         try:
-            return ollama_chat(model=settings.ollama_model, messages=messages, stream=stream)
+            return ollama_chat(model=settings.ollama_model, messages=messages, stream=stream, options=options, format=format)
         except ResponseError as e:
             if e.status_code == 404:
                 logger.warning("Model not found, pulling...")

@@ -11,7 +11,7 @@ sentence-transformers
 transformers
 hnswlib
 tenacity
-
+pdfplumber
  # Dev
 black
 isort
