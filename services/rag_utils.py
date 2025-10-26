@@ -73,6 +73,7 @@ OPTIONS_TEMP = 0.6
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1), reraise=True)
 def generate_character_sync() -> Character:
+    print("Test1 ")
     class Char(BaseModel):
         name: str
         race: str
@@ -80,17 +81,16 @@ def generate_character_sync() -> Character:
         backstory: str
         items: str
         personality: str
-    """resp = ollama_client.generate(
-        prompt=CHAR_PROMPT,
-        max_tokens=CHAR_MAX,
-        temperature=CHAR_TEMP,
-        format = Char.model_json_schema(),
-    )"""
+    print("Test2 ")
     resp = ollama_client.chat(
         messages=CHAR_PROMPT,
         options={"temperature": CHAR_TEMP, "num_predict": CHAR_MAX},
         format=Char.model_json_schema(),
     )
+    print("Test3 ")
+    from pprint import pprint
+    pprint(resp)
+    logger.info(resp)
     raw = getattr(resp, "response", "") or ""
     js = _extract_json(raw)
     try:

@@ -27,30 +27,36 @@ _retry = retry(
     reraise=True,
 )
 
+
 class OllamaClient:
     """
     Thin wrapper around Ollama’s HTTP API—separates chat vs generate.
     """
 
     @_retry
-    def chat(self, messages: List[Dict[str, Any]], stream: bool=False, options: dict=None, format=None) -> Any:
+    def chat(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None, format=None) -> Any:
         try:
-            return ollama_chat(model=settings.ollama_model, messages=messages, stream=stream, options=options, format=format)
+            response = ollama_chat(model=settings.ollama_model, messages=messages, stream=stream, options=options,
+                                   format=format)
+            print(response)
+            return response
         except ResponseError as e:
+            print(e)
             if e.status_code == 404:
                 logger.warning("Model not found, pulling...")
                 ollama_pull(model=settings.ollama_model)
-                return ollama_chat(model=settings.ollama_model, messages=messages, stream=stream)
+                return ollama_chat(model=settings.ollama_model, messages=messages, stream=stream, options=options,
+                                   format=format)
             raise
 
     @_retry
     def generate(
-        self,
-        prompt: str,
-        suffix: str="",
-        max_tokens: int=150,
-        temperature: float=0.8,
-        stream: bool=False,
+            self,
+            prompt: str,
+            suffix: str = "",
+            max_tokens: int = 150,
+            temperature: float = 0.8,
+            stream: bool = False,
     ) -> Any:
         opts = {"temperature": temperature, "num_predict": max_tokens}
         try:
@@ -100,5 +106,6 @@ class OllamaClient:
 
     def ps(self) -> Any:
         return ollama_ps()
+
 
 ollama_client = OllamaClient()

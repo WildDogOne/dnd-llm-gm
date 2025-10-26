@@ -1,10 +1,9 @@
 # TD-LLM-DND
 
-TD-LLM-DND is a Streamlit-based web application that creates a Dungeons & Dragons style adventure using locally hosted llm from ollama.
+DND-LLM-GM is a Streamlit-based web application that creates a Dungeons & Dragons style adventure using locally hosted llm from ollama.
 
 Players can generate characters, start new adventures, and progress through turns with an automated Dungeon Master, AI powered party members and player interactions (TO:DO).
 
-![screen](/current/td-llm-dnd.png)
 
 ## Features
 
@@ -44,10 +43,13 @@ Players can generate characters, start new adventures, and progress through turn
 4. **Set up environment variables**:
     Create a `.env` file in the root directory with the following content:
     ```plaintext
-    OLLAMA_API_ENDPOINT=http://localhost:11434/api/generate
-    PDF_FOLDER=pdf
-    CHROMA_DB_DIR=./chroma_db
+    OLLAMA_HOST=http://localhost:11434/api/generate
+    OLLAMA_MODEL=gemma3:4b
+    PDF_FOLDER=data/pdf
+    VECTOR_INDEX_DIR=data/vector_index
     TURN_LIMIT=10
+    CHUNK_SIZE=500
+    CHUNK_OVERLAP=50
     ```
 
 ## Usage

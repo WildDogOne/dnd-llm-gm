@@ -67,6 +67,8 @@ def main():
     if gs.phase == "start":
         if st.button("Generate Party"):
             try:
+                print("Generating Party")
+                st.info("Generating Party...")
                 runner.new_party()
             except Exception as e:
                 st.error(e)
