@@ -11,6 +11,7 @@ from services.rag_utils import (
 
 logger = logging.getLogger(__name__)
 
+
 class GameRunner:
     def __init__(self):
         self.party: Dict[str, object] | None = None
@@ -19,7 +20,7 @@ class GameRunner:
     def new_party(self) -> Dict[str, object]:
         self.party = generate_party_sync()
         self.state = GameState(turn=0, phase="start")
-        logger.info("Party generated: %s", list(self.party.keys()))
+        print("Party generated: %s", list(self.party.keys()))
         return self.party
 
     def start_adventure(self) -> GameState:
