@@ -7,8 +7,8 @@ from pydantic import HttpUrl
 logger = logging.getLogger(__name__)
 
 class Settings(BaseSettings):
-    ollama_host: HttpUrl = "http://localhost:11434"
-    ollama_model: str = "gemma3"
+    llm_host: str = "http://127.0.0.1:11434"
+    llm_model: str = "gemma3"
     pdf_folder: Path = Path("pdf")
     vector_index_dir: Path = Path("vector_index")
     turn_limit: int = 10

@@ -12,17 +12,19 @@ from core.settings import settings
 
 logger = logging.getLogger(__name__)
 
+
 # ——— Character schema ——————————————————————————————————
 
 class Character(BaseModel):
     name: str
     race: str
-    class_: str = Field(..., alias="class")
+    character_class: str = Field(..., alias="class")
     backstory: str
     items: List[str]
     personality: str
 
     model_config = {"populate_by_name": True}
+
 
 # ——— JSON extraction ——————————————————————————————————
 
@@ -32,13 +34,10 @@ def _extract_json(raw: str) -> str:
     m = re.search(r"\{.*?\}", cleaned, flags=re.DOTALL)
     return m.group(0) if m else cleaned
 
+
 # ——— Generation params ——————————————————————————————————
 
-CHAR_PROMPT = (
-    "SYSTEM: You are a D&D character creator. "
-    "Output exactly one JSON object with keys: name, race, class, backstory, items, personality.\n"
-    "USER: Generate one unique character."
-)
+CHAR_PROMPT = "You are a D&D character creator.  Output exactly one JSON object with keys: name, race, class, backstory, items, personality."
 CHAR_MAX = 200
 CHAR_TEMP = 0.7
 
@@ -69,39 +68,37 @@ OPTIONS_PROMPT = (
 OPTIONS_MAX = 150
 OPTIONS_TEMP = 0.6
 
+
 # ——— Character generation with retry ——————————————————————
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1), reraise=True)
 def generate_character_sync() -> Character:
-    print("Test1 ")
     class Char(BaseModel):
         name: str
         race: str
         character_class: str
         backstory: str
-        items: str
+        items: list[str]
         personality: str
-    print("Test2 ")
-    resp = ollama_client.chat(
-        messages=CHAR_PROMPT,
-        options={"temperature": CHAR_TEMP, "num_predict": CHAR_MAX},
-        format=Char.model_json_schema(),
+
+    messages = [{'role': 'user', 'content': CHAR_PROMPT}]
+    js = ollama_client.chat(
+        messages=messages,
+        options={"temperature": CHAR_TEMP},
+        output_format=Char.model_json_schema(),
     )
-    print("Test3 ")
-    from pprint import pprint
-    pprint(resp)
-    logger.info(resp)
-    raw = getattr(resp, "response", "") or ""
-    js = _extract_json(raw)
+
     try:
         data = json.loads(js)
         return Character.model_validate(data)
     except (json.JSONDecodeError, ValidationError) as e:
-        logger.warning("Parse error (retrying): %s\nRaw: %s", e, raw)
+        logger.warning("Parse error (retrying): %s\nRaw: %s", e, js)
         raise
 
+
 def generate_party_sync() -> Dict[str, Character]:
-    return {f"Player {i+1}": generate_character_sync() for i in range(4)}
+    return {f"Player {i + 1}": generate_character_sync() for i in range(4)}
+
 
 def start_adventure_sync(party: Dict[str, Character]) -> str:
     names = ", ".join(party.keys())
@@ -113,29 +110,32 @@ def start_adventure_sync(party: Dict[str, Character]) -> str:
     )
     return getattr(resp, "response", "").strip()
 
+
 def player_turn_sync(state: Dict, name: str, info: Character) -> str:
     recent = last_sentences(" ".join(state["story"]), 3)
-    lore  = retrieve(info.backstory + " " + recent)
-    ctxt  = f"Character: {info.model_dump_json()}\nRecent: {recent}\nLore: {' | '.join(lore)}"
-    prompt=PLAYER_PROMPT.format(context=ctxt)
-    resp  = ollama_client.generate(prompt=prompt, max_tokens=PLAYER_MAX, temperature=PLAYER_TEMP)
+    lore = retrieve(info.backstory + " " + recent)
+    ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}\nLore: {' | '.join(lore)}"
+    prompt = PLAYER_PROMPT.format(context=ctxt)
+    resp = ollama_client.generate(prompt=prompt, max_tokens=PLAYER_MAX, temperature=PLAYER_TEMP)
     return getattr(resp, "response", "").strip()
+
 
 def dm_turn_sync(state: Dict) -> str:
     recent = last_sentences(" ".join(state["story"]), 5)
-    lore   = retrieve(recent)
-    ctxt   = f"Recent events: {recent}\nLore: {' | '.join(lore)}"
+    lore = retrieve(recent)
+    ctxt = f"Recent events: {recent}\nLore: {' | '.join(lore)}"
     prompt = DM_TURN_PROMPT.format(context=ctxt)
-    resp   = ollama_client.generate(prompt=prompt, max_tokens=DM_MAX, temperature=DM_TEMP)
+    resp = ollama_client.generate(prompt=prompt, max_tokens=DM_MAX, temperature=DM_TEMP)
     return getattr(resp, "response", "").strip()
+
 
 def generate_options_sync(state: Dict) -> List[str]:
     recent = last_sentences(" ".join(state["story"]), 3)
-    ctxt   = f"Recent events: {recent}"
+    ctxt = f"Recent events: {recent}"
     prompt = OPTIONS_PROMPT.format(context=ctxt)
-    resp   = ollama_client.generate(prompt=prompt, max_tokens=OPTIONS_MAX, temperature=OPTIONS_TEMP)
-    raw    = getattr(resp, "response", "") or ""
-    js     = _extract_json(raw)
+    resp = ollama_client.generate(prompt=prompt, max_tokens=OPTIONS_MAX, temperature=OPTIONS_TEMP)
+    raw = getattr(resp, "response", "") or ""
+    js = _extract_json(raw)
     try:
         opts = json.loads(js)
         if isinstance(opts, list) and all(isinstance(o, str) for o in opts):

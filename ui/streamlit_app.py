@@ -41,8 +41,8 @@ def display_log(story):
 
 def main():
     st.sidebar.title("TD-LLM-DND Settings")
-    st.sidebar.write(f"- **Ollama Host:** `{settings.ollama_host}`")
-    st.sidebar.write(f"- **Model:** `{settings.ollama_model}`")
+    st.sidebar.write(f"- **Ollama Host:** `{settings.llm_host}`")
+    st.sidebar.write(f"- **Model:** `{settings.llm_model}`")
     st.sidebar.write(f"- **Turn Limit:** {settings.turn_limit}")
     st.sidebar.write(f"- **RAG:** {settings.enable_rag}")
 

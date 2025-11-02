@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 from requests.exceptions import ConnectionError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 from ollama import (
+    Client,
     chat as ollama_chat,
     generate as ollama_generate,
     embed as ollama_embed,
@@ -33,21 +34,22 @@ class OllamaClient:
     Thin wrapper around Ollama’s HTTP API—separates chat vs generate.
     """
 
+    def __init__(self):
+
+        self.client = Client(
+            host=settings.llm_host,
+            headers={'x-some-header': 'some-value'}
+        )
+
     @_retry
-    def chat(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None, format=None) -> Any:
-        try:
-            response = ollama_chat(model=settings.ollama_model, messages=messages, stream=stream, options=options,
-                                   format=format)
-            print(response)
-            return response
-        except ResponseError as e:
-            print(e)
-            if e.status_code == 404:
-                logger.warning("Model not found, pulling...")
-                ollama_pull(model=settings.ollama_model)
-                return ollama_chat(model=settings.ollama_model, messages=messages, stream=stream, options=options,
-                                   format=format)
-            raise
+    def chat(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None,
+             output_format=None) -> Any:
+        response = self.client.chat(model=settings.llm_model,
+                                    messages=messages,
+                                    stream=stream,
+                                    options=options,
+                                    format=output_format)
+        return response['message']['content']
 
     @_retry
     def generate(
@@ -61,7 +63,7 @@ class OllamaClient:
         opts = {"temperature": temperature, "num_predict": max_tokens}
         try:
             return ollama_generate(
-                model=settings.ollama_model,
+                model=settings.llm_model,
                 prompt=prompt,
                 suffix=suffix,
                 options=opts,
@@ -70,9 +72,9 @@ class OllamaClient:
         except ResponseError as e:
             if e.status_code == 404:
                 logger.warning("Model not found, pulling...")
-                ollama_pull(model=settings.ollama_model)
+                ollama_pull(model=settings.llm_model)
                 return ollama_generate(
-                    model=settings.ollama_model,
+                    model=settings.llm_model,
                     prompt=prompt,
                     suffix=suffix,
                     options=opts,
@@ -81,7 +83,7 @@ class OllamaClient:
             raise
 
     def embed(self, inputs: List[str]) -> Any:
-        return ollama_embed(model=settings.ollama_model, input=inputs)
+        return ollama_embed(model=settings.llm_model, input=inputs)
 
     def list_models(self) -> Any:
         return ollama_list_models()
