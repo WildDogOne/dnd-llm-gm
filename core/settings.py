@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     llm_embedding_model: str = "embeddinggemma:latest"
     pdf_folder: Path = Path("pdf")
     vector_index_dir: Path = Path("vector_index")
+    chromadb_folder: Path = Path("chromadb")
     turn_limit: int = 10
     chunk_size: int = 500
     chunk_overlap: int = 50

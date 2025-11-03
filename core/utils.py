@@ -112,3 +112,4 @@ def retrieve(query: str, k: int = 3) -> List[str]:
     except Exception as e:
         logger.exception("Retrieve error for %r: %s", query, e)
         return []
+

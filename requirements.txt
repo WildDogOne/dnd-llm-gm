@@ -18,3 +18,4 @@ isort
 flake8
 mypy
 pre-commit
+chromadb

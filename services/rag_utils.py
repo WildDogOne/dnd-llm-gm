@@ -147,7 +147,6 @@ def generate_options_sync(state: Dict) -> List[str]:
     js = ollama_client.chat(
         messages=prompt, output_format=Choices.model_json_schema()
     )
-    print(js)
 
     try:
         opts = json.loads(js)

@@ -7,6 +7,7 @@ import streamlit as st
 from requests.exceptions import ConnectionError
 from ollama._types import ResponseError
 
+
 # ensure project root
 sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
@@ -14,6 +15,7 @@ from core.settings import settings
 from core.utils import last_sentences
 from services.game_runner import GameRunner
 from services.ollama_client import ollama_client
+from services.chromadb_client import chromadb_client
 from core.utils import build_index, save_embeddings
 from core.pdf_utils import load_all_pdf_texts
 
@@ -53,7 +55,9 @@ def display_log(story):
     # Create embedding for the story so far
     if len(embedding_list) > 0:
         embedding = ollama_client.embed(embedding_list)
-        save_embeddings(embedding, "story.pkl")
+        chromadb_client.get_document_count()
+
+        #save_embeddings(embedding, "story.pkl")
 
 
 def main():
