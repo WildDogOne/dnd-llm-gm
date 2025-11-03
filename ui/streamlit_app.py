@@ -1,5 +1,8 @@
 import os, sys, logging
-import torch; torch.classes.__path__ = []    # avoid Streamlit watcher errors
+import torch;
+
+torch.classes.__path__ = []  # avoid Streamlit watcher errors
+
 import streamlit as st
 from requests.exceptions import ConnectionError
 from ollama._types import ResponseError
@@ -16,6 +19,9 @@ from core.pdf_utils import load_all_pdf_texts
 
 logger = logging.getLogger(__name__)
 st.set_page_config(page_title="TD-LLM-DND", layout="wide")
+# Create an empty placeholder for the info message
+info_placeholder = st.empty()
+
 
 def display_party(party):
     st.subheader("🧙‍♂️ Party Sheet")
@@ -31,13 +37,15 @@ def display_party(party):
             st.write("**Backstory (snippet):**")
             st.write(data["backstory"][:200] + "...")
 
+
 def display_log(story):
     st.subheader("📜 Adventure Log")
     for i, line in enumerate(story, start=1):
         who, text = line.split(":", 1)
-        icon = "🧙‍♂️" if who.strip()=="DM" else "🎲"
+        icon = "🧙‍♂️" if who.strip() == "DM" else "🎲"
         with st.expander(f"Turn {i} - {icon}"):
             st.markdown(f"**{who}:** {text.strip()}")
+
 
 def main():
     st.sidebar.title("TD-LLM-DND Settings")
@@ -68,15 +76,18 @@ def main():
         if st.button("Generate Party"):
             try:
                 print("Generating Party")
-                st.info("Generating Party...")
+                with info_placeholder.container():
+                    st.info("Generating Party...")
                 runner.new_party()
+                with info_placeholder.container():
+                    st.success("Party Generated")
+
             except Exception as e:
                 st.error(e)
-        return  # re-render
+        # return  # re-render
 
     # Show party once generated
     if runner.party:
-        print(runner.party)
         display_party(runner.party)
 
     # Phase: ready to start
@@ -86,14 +97,12 @@ def main():
                 runner.start_adventure()
             except Exception as e:
                 st.error(e)
-        return
 
     # Phase: intro text
     if gs.phase == "intro":
         st.markdown(f"**Intro:** {gs.intro_text}")
         if st.button("▶️ Continue"):
             runner.request_options()
-        return
 
     # Phase: choice
     if gs.phase == "choice":
@@ -104,12 +113,11 @@ def main():
         if submit:
             runner.process_player_choice(opts.index(choice))
             runner.run_dm_turn()
-        return
 
     # Phase: DM response shown (and loop back to options)
     if gs.phase == "dm_response":
         last = gs.story[-1]
-        who, txt = last.split(":",1)
+        who, txt = last.split(":", 1)
         st.markdown(f"**{who.strip()}:** {txt.strip()}")
         if st.button("▶️ Next Turn"):
             runner.request_options()
@@ -117,6 +125,7 @@ def main():
 
     # Always show log at end
     display_log(gs.story)
+
 
 if __name__ == "__main__":
     main()

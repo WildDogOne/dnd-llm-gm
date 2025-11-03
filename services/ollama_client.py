@@ -62,7 +62,7 @@ class OllamaClient:
     ) -> Any:
         opts = {"temperature": temperature, "num_predict": max_tokens}
         try:
-            return ollama_generate(
+            return self.client.generate(
                 model=settings.llm_model,
                 prompt=prompt,
                 suffix=suffix,
@@ -73,7 +73,7 @@ class OllamaClient:
             if e.status_code == 404:
                 logger.warning("Model not found, pulling...")
                 ollama_pull(model=settings.llm_model)
-                return ollama_generate(
+                return self.client.generate(
                     model=settings.llm_model,
                     prompt=prompt,
                     suffix=suffix,
