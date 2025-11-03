@@ -41,9 +41,14 @@ class GameRunner:
         self.state.phase = "choice"
         return self.state
 
-    def process_player_choice(self, idx: int) -> GameState:
-        opts = self.state.current_options
-        choice = opts[idx]
+    def process_player_choice(self, idx: int = None, text: str = None) -> GameState:
+        if idx:
+            opts = self.state.current_options
+            choice = opts[idx]
+        elif text:
+            choice = text
+        else:
+            raise RuntimeError("No choice selected.")
         self.state.last_choice = choice
         self.state.story.append(f"Player: {choice}")
         self.state.phase = "dm_response"

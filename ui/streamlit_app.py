@@ -41,10 +41,13 @@ def display_party(party):
 def display_log(story):
     st.subheader("📜 Adventure Log")
     for i, line in enumerate(story, start=1):
-        who, text = line.split(":", 1)
-        icon = "🧙‍♂️" if who.strip() == "DM" else "🎲"
-        with st.expander(f"Turn {i} - {icon}"):
-            st.markdown(f"**{who}:** {text.strip()}")
+        if ":" in line:
+            who, text = line.split(":", 1)
+            icon = "🧙‍♂️" if who.strip() == "DM" else "🎲"
+            with st.expander(f"Turn {i} - {icon}"):
+                st.markdown(f"**{who}:** {text.strip()}")
+        else:
+            st.error(f"Invalid log entry at turn {i}: {line}")
 
 
 def main():
@@ -109,9 +112,13 @@ def main():
         opts = gs.current_options
         with st.form(key=f"form_{gs.turn}", clear_on_submit=False):
             choice = st.radio("What will you do?", opts, key=f"choice_{gs.turn}")
+            custom_text = st.text_input("Or enter your own action:", key=f"custom_text_{gs.turn}")
             submit = st.form_submit_button("Submit Choice")
         if submit:
-            runner.process_player_choice(opts.index(choice))
+            if custom_text:
+                runner.process_player_choice(text=custom_text)
+            else:
+                runner.process_player_choice(idx=opts.index(choice))
             runner.run_dm_turn()
 
     # Phase: DM response shown (and loop back to options)
