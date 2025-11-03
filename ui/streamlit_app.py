@@ -52,10 +52,10 @@ def display_log(story):
                 st.markdown(f"**{who}:** {text.strip()}")
         else:
             st.error(f"Invalid log entry at turn {i}: \n{line}")
-    # Create embedding for the story so far
-    if len(embedding_list) > 0:
-        embedding = ollama_client.embed(embedding_list)
-        chromadb_client.get_document_count()
+    ### Create embedding for the story so far
+    ##if len(embedding_list) > 0:
+    ##    embedding = ollama_client.embed(embedding_list)
+    ##    chromadb_client.get_document_count()
 
         #save_embeddings(embedding, "story.pkl")
 
@@ -88,7 +88,6 @@ def main():
     if gs.phase == "start":
         if st.button("Generate Party"):
             try:
-                print("Generating Party")
                 with info_placeholder.container():
                     st.info("Generating Party...")
                 runner.new_party()

@@ -142,16 +142,13 @@ def generate_options_sync(state: Dict) -> List[str]:
     recent = last_sentences(" ".join(state["story"]), 3)
     ctxt = f"Recent events: {recent}"
     prompt = create_options_prompt(ctxt)
-    # resp = ollama_client.generate(prompt=prompt, max_tokens=OPTIONS_MAX, temperature=OPTIONS_TEMP)
-    print(prompt)
+
     js = ollama_client.chat(
         messages=prompt, output_format=Choices.model_json_schema()
     )
 
     try:
         opts = json.loads(js)
-        from pprint import pprint
-        pprint(opts)
     except Exception:
         logger.error("Options parse error, raw: %s", js)
     return opts["choice"]
