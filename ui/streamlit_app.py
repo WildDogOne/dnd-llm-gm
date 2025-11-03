@@ -14,7 +14,7 @@ from core.settings import settings
 from core.utils import last_sentences
 from services.game_runner import GameRunner
 from services.ollama_client import ollama_client
-from core.utils import build_index
+from core.utils import build_index, save_embeddings
 from core.pdf_utils import load_all_pdf_texts
 
 logger = logging.getLogger(__name__)
@@ -40,14 +40,20 @@ def display_party(party):
 
 def display_log(story):
     st.subheader("📜 Adventure Log")
+    embedding_list = []
     for i, line in enumerate(story, start=1):
         if ":" in line:
             who, text = line.split(":", 1)
+            embedding_list.append(f"{who} : {text}")
             icon = "🧙‍♂️" if who.strip() == "DM" else "🎲"
             with st.expander(f"Turn {i} - {icon}"):
                 st.markdown(f"**{who}:** {text.strip()}")
         else:
-            st.error(f"Invalid log entry at turn {i}: {line}")
+            st.error(f"Invalid log entry at turn {i}: \n{line}")
+    # Create embedding for the story so far
+    if len(embedding_list) > 0:
+        embedding = ollama_client.embed(embedding_list)
+        save_embeddings(embedding, "story.pkl")
 
 
 def main():
@@ -115,11 +121,15 @@ def main():
             custom_text = st.text_input("Or enter your own action:", key=f"custom_text_{gs.turn}")
             submit = st.form_submit_button("Submit Choice")
         if submit:
-            if custom_text:
-                runner.process_player_choice(text=custom_text)
+            if custom_text or choice:
+                if custom_text:
+                    runner.process_player_choice(text=custom_text)
+                elif choice:
+                    runner.process_player_choice(idx=opts.index(choice))
+                runner.run_dm_turn()
             else:
-                runner.process_player_choice(idx=opts.index(choice))
-            runner.run_dm_turn()
+                with info_placeholder.container():
+                    st.info("Select an option or write a custom text")
 
     # Phase: DM response shown (and loop back to options)
     if gs.phase == "dm_response":

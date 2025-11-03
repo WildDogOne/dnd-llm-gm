@@ -30,7 +30,7 @@ class GameRunner:
         self.state.turn = 1
         self.state.phase = "intro"
         self.state.intro_text = intro
-        self.state.story = [intro]
+        self.state.story = [f"DM: {intro}"]
         return self.state
 
     def request_options(self) -> GameState:
@@ -42,7 +42,7 @@ class GameRunner:
         return self.state
 
     def process_player_choice(self, idx: int = None, text: str = None) -> GameState:
-        if idx:
+        if idx is not None:
             opts = self.state.current_options
             choice = opts[idx]
         elif text:

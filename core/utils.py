@@ -45,6 +45,14 @@ def _needs_rebuild() -> bool:
             rebuild = True
     return rebuild
 
+def save_embeddings(embeddings: np.ndarray, filename) -> None:
+    idx_dir = settings.vector_index_dir
+    idx_path = idx_dir / INDEX_FILE
+    txts_path = idx_dir / filename
+    with open(txts_path, "wb") as f:
+        pickle.dump(embeddings, f)
+
+
 def build_index() -> None:
     """
     Load or (re)build the HNSW index of PDF embeddings.

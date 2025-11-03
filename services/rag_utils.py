@@ -61,10 +61,16 @@ PLAYER_PROMPT = (
 PLAYER_MAX = 150
 PLAYER_TEMP = 0.6
 
-OPTIONS_PROMPT = (
-    "SYSTEM: You are the Dungeon Master. Given recent events, output exactly 3 possible action options as a JSON array.\n"
-    "USER: {context}"
-)
+
+def create_options_prompt(context):
+    return [
+        {'role': 'system',
+         'content': "You are the Dungeon Master."},
+        {'role': 'user',
+         'content': f"Given recent events, output exactly 3 possible action options as a JSON array.\n{context}"}
+    ]
+
+
 OPTIONS_MAX = 150
 OPTIONS_TEMP = 0.6
 
@@ -130,16 +136,24 @@ def dm_turn_sync(state: Dict) -> str:
 
 
 def generate_options_sync(state: Dict) -> List[str]:
+    class Choices(BaseModel):
+        choice: list[str]
+
     recent = last_sentences(" ".join(state["story"]), 3)
     ctxt = f"Recent events: {recent}"
-    prompt = OPTIONS_PROMPT.format(context=ctxt)
-    resp = ollama_client.generate(prompt=prompt, max_tokens=OPTIONS_MAX, temperature=OPTIONS_TEMP)
-    raw = getattr(resp, "response", "") or ""
-    js = _extract_json(raw)
+    prompt = create_options_prompt(ctxt)
+    # resp = ollama_client.generate(prompt=prompt, max_tokens=OPTIONS_MAX, temperature=OPTIONS_TEMP)
+    print(prompt)
+    js = ollama_client.chat(
+        messages=prompt, output_format=Choices.model_json_schema()
+    )
+    print(js)
+
     try:
         opts = json.loads(js)
-        if isinstance(opts, list) and all(isinstance(o, str) for o in opts):
-            return opts
+        from pprint import pprint
+        pprint(opts)
     except Exception:
-        logger.error("Options parse error, raw: %s", raw)
-    return ["Continue forward", "Inspect surroundings", "Rest and recover"]
+        logger.error("Options parse error, raw: %s", js)
+    return opts["choice"]
+    # return ["Continue forward", "Inspect surroundings", "Rest and recover"]

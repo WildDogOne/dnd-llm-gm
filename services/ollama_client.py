@@ -83,7 +83,9 @@ class OllamaClient:
             raise
 
     def embed(self, inputs: List[str]) -> Any:
-        return ollama_embed(model=settings.llm_model, input=inputs)
+        response = self.client.embed(model=settings.llm_embedding_model, input=inputs)
+        embeddings = response["embeddings"]
+        return embeddings
 
     def list_models(self) -> Any:
         return ollama_list_models()
