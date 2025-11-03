@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     chunk_size: int = 500
     chunk_overlap: int = 50
     enable_rag: bool = True
+    player_count: int = 4
 
     class Config:
         env_file = ".env"

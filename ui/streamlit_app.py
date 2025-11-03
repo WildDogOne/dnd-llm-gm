@@ -24,7 +24,7 @@ def display_party(party):
         with col.expander(name, expanded=False):
             data = char.model_dump()
             st.write(f"**Race:** {data['race']}  ")
-            st.write(f"**Class:** {data['class']}  ")
+            st.write(f"**Class:** {data['character_class']}  ")
             st.write("**Items:**")
             for it in data["items"]:
                 st.write(f"- {it}")
@@ -76,6 +76,7 @@ def main():
 
     # Show party once generated
     if runner.party:
+        print(runner.party)
         display_party(runner.party)
 
     # Phase: ready to start

@@ -97,7 +97,7 @@ def generate_character_sync() -> Character:
 
 
 def generate_party_sync() -> Dict[str, Character]:
-    return {f"Player {i + 1}": generate_character_sync() for i in range(4)}
+    return {f"Player {i + 1}": generate_character_sync() for i in range(settings.player_count)}
 
 
 def start_adventure_sync(party: Dict[str, Character]) -> str:
