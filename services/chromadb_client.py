@@ -104,10 +104,11 @@ class ChromadbClient:
         #print(collection.get())
 
     def retrieve(self, question: str) -> List[Dict]:
-        question_prompt = f"Formulate a question for a ChromaDB based on the following information, to retrieve more context: {question}"
-        print(f"Question: {question_prompt}")
+        question_prompt = f"Formulate a question for a ChromaDB based on the following information, to retrieve more context. Only return the question: {question}"
+        question = ollama_client.generate(question_prompt)["response"]
+        print(f"Question: {question}")
         # generate an embedding for the input and retrieve the most relevant doc
-        embeddings = ollama_client.embed(inputs=question_prompt)
+        embeddings = ollama_client.embed(inputs=question)
         collection = self.get_collection(collection_name="dnd")
         results = collection.query(
             query_embeddings=embeddings,

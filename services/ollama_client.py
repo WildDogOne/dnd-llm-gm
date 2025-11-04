@@ -56,7 +56,7 @@ class OllamaClient:
             self,
             prompt: str,
             suffix: str = "",
-            max_tokens: int = 150,
+            max_tokens: int = 5000,
             temperature: float = 0.8,
             stream: bool = False,
     ) -> Any:

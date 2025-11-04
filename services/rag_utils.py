@@ -123,7 +123,7 @@ def player_turn_sync(state: Dict, name: str, info: Character) -> str:
     # lore = retrieve(info.backstory + " " + recent)
     lore = chromadb_client.retrieve(info.backstory + " " + recent)
     if lore:
-        ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}\nLore: {' | '.join(lore)}"
+        ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}\nAdditional Backstory: {' | '.join(lore)}"
     else:
         ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}"
     prompt = PLAYER_PROMPT.format(context=ctxt)
@@ -137,7 +137,7 @@ def dm_turn_sync(state: Dict) -> str:
     # ollama_client.client.generate(prompt=f{})
     lore = chromadb_client.retrieve(recent)
     if lore:
-        ctxt = f"Recent events: {recent}\nLore: {' | '.join(lore)}"
+        ctxt = f"Recent events: {recent}\nAdditional Backstory: {' | '.join(lore)}"
     else:
         ctxt = f"Recent events: {recent}"
     prompt = DM_TURN_PROMPT.format(context=ctxt)
