@@ -9,6 +9,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 from core.utils import retrieve, last_sentences
 from services.ollama_client import ollama_client
 from core.settings import settings
+from .chromadb_client import chromadb_client
 
 logger = logging.getLogger(__name__)
 
@@ -118,18 +119,27 @@ def start_adventure_sync(party: Dict[str, Character]) -> str:
 
 
 def player_turn_sync(state: Dict, name: str, info: Character) -> str:
-    recent = last_sentences(" ".join(state["story"]), 3)
-    lore = retrieve(info.backstory + " " + recent)
-    ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}\nLore: {' | '.join(lore)}"
+    recent = last_sentences(" ".join(state["story"]), 10)
+    # lore = retrieve(info.backstory + " " + recent)
+    lore = chromadb_client.retrieve(info.backstory + " " + recent)
+    if lore:
+        ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}\nLore: {' | '.join(lore)}"
+    else:
+        ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}"
     prompt = PLAYER_PROMPT.format(context=ctxt)
     resp = ollama_client.generate(prompt=prompt, max_tokens=PLAYER_MAX, temperature=PLAYER_TEMP)
     return getattr(resp, "response", "").strip()
 
 
 def dm_turn_sync(state: Dict) -> str:
-    recent = last_sentences(" ".join(state["story"]), 5)
-    lore = retrieve(recent)
-    ctxt = f"Recent events: {recent}\nLore: {' | '.join(lore)}"
+    recent = last_sentences(" ".join(state["story"]), 10)
+    # lore = retrieve(recent)
+    # ollama_client.client.generate(prompt=f{})
+    lore = chromadb_client.retrieve(recent)
+    if lore:
+        ctxt = f"Recent events: {recent}\nLore: {' | '.join(lore)}"
+    else:
+        ctxt = f"Recent events: {recent}"
     prompt = DM_TURN_PROMPT.format(context=ctxt)
     resp = ollama_client.generate(prompt=prompt, max_tokens=DM_MAX, temperature=DM_TEMP)
     return getattr(resp, "response", "").strip()
@@ -139,7 +149,7 @@ def generate_options_sync(state: Dict) -> List[str]:
     class Choices(BaseModel):
         choice: list[str]
 
-    recent = last_sentences(" ".join(state["story"]), 3)
+    recent = last_sentences(" ".join(state["story"]), 10)
     ctxt = f"Recent events: {recent}"
     prompt = create_options_prompt(ctxt)
 

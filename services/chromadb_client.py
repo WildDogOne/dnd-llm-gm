@@ -74,7 +74,7 @@ class ChromadbClient:
         embeddings = self.generate_embeddings(chunks)
 
         # Prepare data for ChromaDB
-        collection = self.get_collection(collection_name=step)
+        collection = self.get_collection(collection_name="dnd")
 
         # Get the highest ID from the existing documents
         existing_ids = collection.get()
@@ -101,7 +101,21 @@ class ChromadbClient:
             ids=ids
         )
         self.get_document_count()
-        print(collection.get())
+        #print(collection.get())
+
+    def retrieve(self, question: str) -> List[Dict]:
+        question_prompt = f"Formulate a question for a ChromaDB based on the following information, to retrieve more context: {question}"
+        print(f"Question: {question_prompt}")
+        # generate an embedding for the input and retrieve the most relevant doc
+        embeddings = ollama_client.embed(inputs=question_prompt)
+        collection = self.get_collection(collection_name="dnd")
+        results = collection.query(
+            query_embeddings=embeddings,
+            n_results=1
+        )
+        data = results['documents'][0][0]
+        print(f"Results: {data}")
+        return data
 
 
 chromadb_client = ChromadbClient()
