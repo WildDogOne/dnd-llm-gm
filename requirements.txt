@@ -19,7 +19,10 @@ flake8
 mypy
 pre-commit
 chromadb
-langchain_ollama
-langchain
-
-#pip install haystack-ai datasets sentence-transformers ollama-haystack chroma-haystack jsonschema nltk
+haystack-ai
+datasets
+sentence-transformers
+ollama-haystack
+chroma-haystack
+jsonschema
+nltk

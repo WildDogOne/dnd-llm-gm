@@ -23,6 +23,9 @@ class ChromadbClient:
     def __init__(self) -> None:
         self.document_store = ChromaDocumentStore(persist_path=settings.chromadb_folder)
 
+    def reset_store(self):
+        self.document_store.delete_all_documents()
+
     def embed(self, text: str, step) -> None:
         doc = Document(content=text)
         preproc = DocumentPreprocessor(split_by="word", split_length=10, split_overlap=0)

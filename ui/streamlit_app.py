@@ -4,8 +4,6 @@ import torch;
 torch.classes.__path__ = []  # avoid Streamlit watcher errors
 
 import streamlit as st
-from requests.exceptions import ConnectionError
-from ollama._types import ResponseError
 
 # ensure project root
 sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
@@ -13,6 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 from core.settings import settings
 from services.game_runner import GameRunner
 from core.utils import build_index
+from services.chromadb_client import chromadb_client
 
 logger = logging.getLogger(__name__)
 st.set_page_config(page_title="AI Game Master", layout="wide")
@@ -26,6 +25,7 @@ def display_party(party):
     for col, (name, char) in zip(cols, party.items()):
         with col.expander(name, expanded=False):
             data = char.model_dump()
+            st.write(f"**Name:** {data['name']}  ")
             st.write(f"**Race:** {data['race']}  ")
             st.write(f"**Class:** {data['character_class']}  ")
             st.write("**Items:**")
@@ -86,6 +86,8 @@ def main():
                 with info_placeholder.container():
                     st.info("Generating Party...")
                 runner.new_party()
+                chromadb_client.reset_store()
+
                 with info_placeholder.container():
                     st.success("Party Generated")
 
