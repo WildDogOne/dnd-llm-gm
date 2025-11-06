@@ -6,11 +6,10 @@ from typing import Dict, List
 from pydantic import BaseModel, Field, ValidationError
 from tenacity import retry, stop_after_attempt, wait_fixed
 
-from core.utils import retrieve, last_sentences
+from core.utils import last_sentences
 from services.ollama_client import ollama_client
 from core.settings import settings
 from .chromadb_client import chromadb_client
-from haystack.dataclasses import ChatMessage
 
 logger = logging.getLogger(__name__)
 

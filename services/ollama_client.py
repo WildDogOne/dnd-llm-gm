@@ -4,9 +4,6 @@ from requests.exceptions import ConnectionError
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 from ollama import (
     Client,
-    chat as ollama_chat,
-    generate as ollama_generate,
-    embed as ollama_embed,
     list as ollama_list_models,
     show as ollama_show,
     pull as ollama_pull,
@@ -79,10 +76,10 @@ class OllamaClient:
 
         return generator.run(prompt)["replies"][0]
 
-    def embed(self, inputs: List[str]) -> Any:
-        response = self.client.embed(model=settings.llm_embedding_model, input=inputs)
-        embeddings = response["embeddings"]
-        return embeddings
+    #def embed(self, inputs: List[str]) -> Any:
+    #    response = self.client.embed(model=settings.llm_embedding_model, input=inputs)
+    #    embeddings = response["embeddings"]
+    #    return embeddings
 
     def list_models(self) -> Any:
         return ollama_list_models()

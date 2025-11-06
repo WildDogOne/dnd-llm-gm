@@ -1,17 +1,11 @@
 from haystack_integrations.document_stores.chroma import ChromaDocumentStore
 from haystack_integrations.components.retrievers.chroma import ChromaEmbeddingRetriever
-from datasets import load_dataset
 from haystack import Document
 from haystack import Pipeline
-from haystack.components.builders import PromptBuilder
 from haystack.components.embedders import SentenceTransformersDocumentEmbedder
 from haystack.components.embedders import SentenceTransformersTextEmbedder
-from haystack_integrations.components.generators.ollama import OllamaGenerator, OllamaChatGenerator
-from haystack.dataclasses import ChatMessage
 from haystack.components.preprocessors import DocumentPreprocessor
 
-import chromadb
-from chromadb.config import Settings
 from core.settings import settings
 from typing import List, Dict
 from .ollama_client import ollama_client
