@@ -17,6 +17,8 @@ from ollama import (
     ps as ollama_ps,
 )
 from ollama._types import ResponseError
+from haystack_integrations.components.generators.ollama import OllamaGenerator, OllamaChatGenerator
+
 from core.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -35,14 +37,13 @@ class OllamaClient:
     """
 
     def __init__(self):
-
         self.client = Client(
             host=settings.llm_host,
             headers={'x-some-header': 'some-value'}
         )
 
     @_retry
-    def chat(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None,
+    def structured(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None,
              output_format=None) -> Any:
         response = self.client.chat(model=settings.llm_model,
                                     messages=messages,
@@ -50,6 +51,15 @@ class OllamaClient:
                                     options=options,
                                     format=output_format)
         return response['message']['content']
+
+    @_retry
+    def chat(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None,
+             output_format=None) -> Any:
+        llm = OllamaChatGenerator(
+            model=settings.llm_model, url=settings.llm_host, response_format=output_format
+        )
+        result = llm.run(messages)
+        return result["replies"][0]._content[0].text
 
     @_retry
     def generate(
@@ -60,27 +70,14 @@ class OllamaClient:
             temperature: float = 0.8,
             stream: bool = False,
     ) -> Any:
-        opts = {"temperature": temperature, "num_predict": max_tokens}
-        try:
-            return self.client.generate(
-                model=settings.llm_model,
-                prompt=prompt,
-                suffix=suffix,
-                options=opts,
-                stream=stream,
-            )
-        except ResponseError as e:
-            if e.status_code == 404:
-                logger.warning("Model not found, pulling...")
-                ollama_pull(model=settings.llm_model)
-                return self.client.generate(
-                    model=settings.llm_model,
-                    prompt=prompt,
-                    suffix=suffix,
-                    options=opts,
-                    stream=stream,
-                )
-            raise
+        generator = OllamaGenerator(model=settings.llm_model,
+                                    url=settings.llm_host,
+                                    generation_kwargs={
+                                        "num_predict": max_tokens,
+                                        "temperature": temperature,
+                                    })
+
+        return generator.run(prompt)["replies"][0]
 
     def embed(self, inputs: List[str]) -> Any:
         response = self.client.embed(model=settings.llm_embedding_model, input=inputs)

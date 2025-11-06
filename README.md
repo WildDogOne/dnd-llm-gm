@@ -1,4 +1,4 @@
-# TD-LLM-DND
+# DND-LLM-GM
 
 DND-LLM-GM is a Streamlit-based web application that creates a Dungeons & Dragons style adventure using locally hosted llm from ollama.
 

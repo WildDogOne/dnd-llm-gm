@@ -10,6 +10,7 @@ from core.utils import retrieve, last_sentences
 from services.ollama_client import ollama_client
 from core.settings import settings
 from .chromadb_client import chromadb_client
+from haystack.dataclasses import ChatMessage
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ DM_TURN_PROMPT = (
     "summarizing what happened and presenting the next challenge.\n"
     "USER: {context}"
 )
-DM_MAX = 300
+DM_MAX = 3000
 DM_TEMP = 0.8
 
 PLAYER_PROMPT = (
@@ -70,7 +71,14 @@ def create_options_prompt(context):
         {'role': 'user',
          'content': f"Given recent events, output exactly 3 possible action options as a JSON array.\n{context}"}
     ]
-
+    # Haystack Prompt
+    """
+        return [
+            ChatMessage.from_system("\nYou are the Dungeon Master."),
+            ChatMessage.from_user(
+                f"Given recent events, output exactly 3 possible action options as a JSON array.\n{context}")
+        ]
+    """
 
 OPTIONS_MAX = 150
 OPTIONS_TEMP = 0.6
@@ -88,8 +96,9 @@ def generate_character_sync() -> Character:
         items: list[str]
         personality: str
 
+    # messages = [ChatMessage.from_user("CHAR_PROMPT")]
     messages = [{'role': 'user', 'content': CHAR_PROMPT}]
-    js = ollama_client.chat(
+    js = ollama_client.structured(
         messages=messages,
         options={"temperature": CHAR_TEMP},
         output_format=Char.model_json_schema(),
@@ -110,12 +119,11 @@ def generate_party_sync() -> Dict[str, Character]:
 def start_adventure_sync(party: Dict[str, Character]) -> str:
     names = ", ".join(party.keys())
     prompt = DM_INTRO_PROMPT.format(names=names)
-    resp = ollama_client.generate(
+    return ollama_client.generate(
         prompt=prompt,
         max_tokens=DM_MAX,
         temperature=DM_TEMP
     )
-    return getattr(resp, "response", "").strip()
 
 
 def player_turn_sync(state: Dict, name: str, info: Character) -> str:
@@ -127,8 +135,7 @@ def player_turn_sync(state: Dict, name: str, info: Character) -> str:
     else:
         ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}"
     prompt = PLAYER_PROMPT.format(context=ctxt)
-    resp = ollama_client.generate(prompt=prompt, max_tokens=PLAYER_MAX, temperature=PLAYER_TEMP)
-    return getattr(resp, "response", "").strip()
+    return ollama_client.generate(prompt=prompt, max_tokens=PLAYER_MAX, temperature=PLAYER_TEMP)
 
 
 def dm_turn_sync(state: Dict) -> str:
@@ -141,8 +148,7 @@ def dm_turn_sync(state: Dict) -> str:
     else:
         ctxt = f"Recent events: {recent}"
     prompt = DM_TURN_PROMPT.format(context=ctxt)
-    resp = ollama_client.generate(prompt=prompt, max_tokens=DM_MAX, temperature=DM_TEMP)
-    return getattr(resp, "response", "").strip()
+    return ollama_client.generate(prompt=prompt, max_tokens=DM_MAX, temperature=DM_TEMP)
 
 
 def generate_options_sync(state: Dict) -> List[str]:
@@ -153,7 +159,7 @@ def generate_options_sync(state: Dict) -> List[str]:
     ctxt = f"Recent events: {recent}"
     prompt = create_options_prompt(ctxt)
 
-    js = ollama_client.chat(
+    js = ollama_client.structured(
         messages=prompt, output_format=Choices.model_json_schema()
     )
 
