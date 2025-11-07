@@ -24,7 +24,8 @@ class ChromadbClient:
         self.document_store = ChromaDocumentStore(persist_path=settings.chromadb_folder)
 
     def reset_store(self):
-        self.document_store.delete_all_documents()
+        if self.document_store.count_documents() > 0:
+            self.document_store.delete_all_documents()
 
     def embed(self, text: str, step) -> None:
         doc = Document(content=text)

@@ -6,6 +6,7 @@ from pydantic import HttpUrl
 
 logger = logging.getLogger(__name__)
 
+
 class Settings(BaseSettings):
     llm_host: str = "http://127.0.0.1:11434"
     llm_model: str = "gemma3"
@@ -19,10 +20,12 @@ class Settings(BaseSettings):
     enable_rag: bool = True
     player_count: int = 4
     context_size: int = 16384
+    game_state: Path = Path("game_state")
 
     class Config:
         env_file = ".env"
         validate_assignment = True
+
 
 settings = Settings()
 

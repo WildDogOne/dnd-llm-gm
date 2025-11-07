@@ -1,6 +1,6 @@
-import os, sys, logging
+import os, sys, logging, pickle
 import torch;
-
+from pathlib import Path
 
 torch.classes.__path__ = []  # avoid Streamlit watcher errors
 
@@ -19,6 +19,35 @@ logger = logging.getLogger(__name__)
 st.set_page_config(page_title="AI Game Master", layout="wide")
 # Create an empty placeholder for the info message
 info_placeholder = st.empty()
+
+game_state_file = settings.game_state / "game_state.pkl"
+party_file = settings.game_state / "party_state.pkl"
+
+
+def save_game_state(game_state=None, party=None):
+    game_state_file.parent.mkdir(parents=True, exist_ok=True)
+    party_file.parent.mkdir(parents=True, exist_ok=True)
+    if game_state:
+        with open(game_state_file, 'wb') as f:
+            pickle.dump(game_state, f)
+    if party:
+        with open(party_file, 'wb') as f:
+            pickle.dump(party, f)
+
+
+def load_game_state(file=None):
+    if os.path.exists(file):
+        with open(file, 'rb') as f:
+            return pickle.load(f)
+    return None
+
+
+def delete_game_state():
+    chromadb_client.reset_store()
+    if os.path.exists(game_state_file):
+        os.remove(game_state_file)
+    if os.path.exists(party_file):
+        os.remove(party_file)
 
 
 def display_party(party):
@@ -63,7 +92,14 @@ def main():
         st.session_state.runner = GameRunner()
     runner: GameRunner = st.session_state.runner
     gs = runner.state
-
+    if "loaded" not in st.session_state:
+        st.session_state.loaded = False
+        if os.path.exists(game_state_file):
+            gs = load_game_state(game_state_file)
+            runner.state = gs
+        if os.path.exists(party_file) and not runner.party:
+            runner.party = load_game_state(party_file)
+        st.session_state.loaded = True
     # Create a question bar that is always present
     st.sidebar.title("Ask DM")
     question = st.sidebar.text_input("Enter your question:")
@@ -76,6 +112,16 @@ def main():
         st.write(f"- **Model:** `{settings.llm_model}`")
         st.write(f"- **Turn Limit:** {settings.turn_limit}")
         st.write(f"- **RAG:** {settings.enable_rag}")
+        # Save game state before exiting
+        if st.button('Save Game State'):
+            save_game_state(game_state=gs)
+            if runner.party:
+                save_game_state(party=runner.party)
+
+        # Delete game state
+        if st.button('Delete Game State'):
+            delete_game_state()
+            st.write("Game state deleted.")
 
     # RAG PDF upload
     up = st.sidebar.file_uploader("Upload PDFs for lore", accept_multiple_files=True, type="pdf")
@@ -95,11 +141,12 @@ def main():
                 with info_placeholder.container():
                     st.info("Generating Party...")
                 runner.new_party()
-                chromadb_client.reset_store()
 
                 with info_placeholder.container():
                     st.success("Party Generated")
-
+                save_game_state(game_state=gs)
+                if runner.party:
+                    save_game_state(party=runner.party)
             except Exception as e:
                 st.error(e)
         # return  # re-render
@@ -113,6 +160,9 @@ def main():
         if st.button("🐉 Start Adventure"):
             try:
                 runner.start_adventure()
+                save_game_state(game_state=gs)
+                if runner.party:
+                    save_game_state(party=runner.party)
             except Exception as e:
                 st.error(e)
 
@@ -121,6 +171,9 @@ def main():
         st.markdown(f"**Intro:** {gs.intro_text}")
         if st.button("▶️ Continue"):
             runner.request_options()
+            save_game_state(game_state=gs)
+            if runner.party:
+                save_game_state(party=runner.party)
 
     # Phase: choice
     if gs.phase == "choice":
@@ -139,6 +192,9 @@ def main():
             else:
                 with info_placeholder.container():
                     st.info("Select an option or write a custom text")
+            save_game_state(game_state=gs)
+            if runner.party:
+                save_game_state(party=runner.party)
 
     # Phase: DM response shown (and loop back to options)
     if gs.phase == "dm_response":
@@ -147,6 +203,9 @@ def main():
         st.markdown(f"**{who.strip()}:** {txt.strip()}")
         if st.button("▶️ Next Turn"):
             runner.request_options()
+            save_game_state(game_state=gs)
+            if runner.party:
+                save_game_state(party=runner.party)
         # fall through to log
 
     # Always show log at end
