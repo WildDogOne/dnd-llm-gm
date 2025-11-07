@@ -6,6 +6,7 @@ from pathlib import Path
 
 import streamlit as st
 import time
+
 # ensure project root
 sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
@@ -18,35 +19,7 @@ logger = logging.getLogger(__name__)
 st.set_page_config(page_title="AI Game Master", layout="wide")
 # Create an empty placeholder for the info message
 info_placeholder = st.empty()
-
-game_state_file = settings.game_state / "game_state.pkl"
-party_file = settings.game_state / "party_state.pkl"
-
-
-def save_game_state(game_state=None, party=None):
-    game_state_file.parent.mkdir(parents=True, exist_ok=True)
-    party_file.parent.mkdir(parents=True, exist_ok=True)
-    if game_state:
-        with open(game_state_file, 'wb') as f:
-            pickle.dump(game_state, f)
-    if party:
-        with open(party_file, 'wb') as f:
-            pickle.dump(party, f)
-
-
-def load_game_state(file=None):
-    if os.path.exists(file):
-        with open(file, 'rb') as f:
-            return pickle.load(f)
-    return None
-
-
-def delete_game_state():
-    chromadb_client.reset_store()
-    if os.path.exists(game_state_file):
-        os.remove(game_state_file)
-    if os.path.exists(party_file):
-        os.remove(party_file)
+from core.utils import save_game_state, load_game_state, delete_game_state, game_state_file, party_file
 
 
 def display_party(party):
@@ -59,8 +32,10 @@ def display_party(party):
             st.write(f"**Race:** {data['race']}  ")
             st.write(f"**Class:** {data['character_class']}  ")
             st.write("**Items:**")
+            x = ""
             for it in data["items"]:
-                st.write(f"- {it}")
+                x += f"- {it}\n"
+            st.markdown(x)
             st.write("**Backstory (snippet):**")
             st.write(data["backstory"][:200] + "...")
 
@@ -77,12 +52,6 @@ def display_log(story):
                 st.markdown(f"**{who}:** {text.strip()}")
         else:
             st.error(f"Invalid log entry at turn {i}: \n{line}")
-    ### Create embedding for the story so far
-    ##if len(embedding_list) > 0:
-    ##    embedding = ollama_client.embed(embedding_list)
-    ##    chromadb_client.get_document_count()
-
-    # save_embeddings(embedding, "story.pkl")
 
 
 def main():
@@ -103,31 +72,32 @@ def main():
     ## Sidebar
     # Create a question bar that is always present
     st.sidebar.title("Ask DM")
-    question = st.sidebar.text_input("Enter your question:")
-    if st.sidebar.button("Ask DM"):
+    question = st.sidebar.chat_input("Enter your question:")
+    if question:
         result = runner.ask_dm(question)
         st.sidebar.markdown(result)
     with st.sidebar.expander("Settings"):
-        # st.sidebar.title("TD-LLM-DND Settings")
-        st.write(f"- **Ollama Host:** `{settings.llm_host}`")
-        st.write(f"- **Model:** `{settings.llm_model}`")
-        st.write(f"- **Turn Limit:** {settings.turn_limit}")
-        st.write(f"- **RAG:** {settings.enable_rag}")
-        # Save game state before exiting
-        if st.button('Save Game State'):
-            save_game_state(game_state=gs)
-            if runner.party:
-                save_game_state(party=runner.party)
-        # Delete game state
-        if st.button('Delete Game State'):
-            delete_game_state()
-            st.write("Game state deleted.")
+        st.markdown(f"- **Ollama Host:** `{settings.llm_host}`\n"
+                    f"- **Model:** `{settings.llm_model}`\n"
+                    f"- **Turn Limit:** {settings.turn_limit}\n"
+                    f"- **RAG:** {settings.enable_rag}")
+        # Two colum layout for the load and save buttons
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button('Save Game State'):
+                save_game_state(game_state=gs)
+                if runner.party:
+                    save_game_state(party=runner.party)
+        with col2:
+            if st.button('Delete Game State'):
+                delete_game_state()
+                st.write("Game state deleted.")
     with st.sidebar.expander("PDF"):
         # RAG PDF upload
         up = st.file_uploader("Upload PDFs for lore", accept_multiple_files=True, type="pdf")
         if up:
             with st.spinner("Building Index", show_time=True):
-                #time.sleep(5)
+                # time.sleep(5)
                 for f in up:
                     dst = settings.pdf_folder / f.name
                     dst.write_bytes(f.getbuffer())
