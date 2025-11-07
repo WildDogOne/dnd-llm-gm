@@ -28,15 +28,6 @@ class Character(BaseModel):
     model_config = {"populate_by_name": True}
 
 
-# ——— JSON extraction ——————————————————————————————————
-
-def _extract_json(raw: str) -> str:
-    # Strip fences (case-insensitive), then grab first {...} non-greedily
-    cleaned = re.sub(r"```(?:json)?\s*", "", raw.strip(), flags=re.IGNORECASE)
-    m = re.search(r"\{.*?\}", cleaned, flags=re.DOTALL)
-    return m.group(0) if m else cleaned
-
-
 # ——— Generation params ——————————————————————————————————
 
 CHAR_PROMPT = "You are a D&D character creator.  Output exactly one JSON object with keys: name, race, class, backstory, items, personality."
