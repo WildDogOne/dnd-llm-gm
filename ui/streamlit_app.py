@@ -1,8 +1,8 @@
 import os, sys, logging, pickle
-import torch;
+#import torch;
 from pathlib import Path
 
-torch.classes.__path__ = []  # avoid Streamlit watcher errors
+#torch.classes.__path__ = []  # avoid Streamlit watcher errors
 
 import streamlit as st
 

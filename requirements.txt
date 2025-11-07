@@ -1,24 +1,25 @@
-ollama
-httpx
-faiss-cpu
-numpy
-PyMuPDF
-python-dotenv
+##httpx
+##faiss-cpu
+##numpy
+##PyMuPDF
+##python-dotenv
+##
+##pydantic
+##
+##sentence-transformers
+##transformers
+##hnswlib
+##tenacity
+##pdfplumber
+## # Dev
+##black
+##isort
+##flake8
+##mypy
+##pre-commit
+##chromadb
 streamlit
-pydantic
-pydantic-settings
-sentence-transformers
-transformers
-hnswlib
-tenacity
-pdfplumber
- # Dev
-black
-isort
-flake8
-mypy
-pre-commit
-chromadb
+ollama
 haystack-ai
 datasets
 sentence-transformers
@@ -26,3 +27,9 @@ ollama-haystack
 chroma-haystack
 jsonschema
 nltk
+pydantic-settings
+pydantic
+# TODO: Remove after PDF RAG Rebuild
+hnswlib
+numpy
+pdfplumber
