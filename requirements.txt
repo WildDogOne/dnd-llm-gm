@@ -29,6 +29,7 @@ jsonschema
 nltk
 pydantic-settings
 pydantic
+pypdf
 #hnswlib
 #numpy
 #pdfplumber

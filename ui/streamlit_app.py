@@ -5,13 +5,13 @@ from pathlib import Path
 # torch.classes.__path__ = []  # avoid Streamlit watcher errors
 
 import streamlit as st
-
+import time
 # ensure project root
 sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
 from core.settings import settings
 from services.game_runner import GameRunner
-#from core.utils import build_index
+# from core.utils import build_index
 from services.chromadb_client import chromadb_client
 
 logger = logging.getLogger(__name__)
@@ -118,21 +118,21 @@ def main():
             save_game_state(game_state=gs)
             if runner.party:
                 save_game_state(party=runner.party)
-
         # Delete game state
         if st.button('Delete Game State'):
             delete_game_state()
             st.write("Game state deleted.")
-
-    # RAG PDF upload
-    # TODO: Rewrite the whole thing
-    ##up = st.sidebar.file_uploader("Upload PDFs for lore", accept_multiple_files=True, type="pdf")
-    ##if up:
-    ##    for f in up:
-    ##        dst = settings.pdf_folder / f.name
-    ##        dst.write_bytes(f.getbuffer())
-    ##    build_index()
-    ##    st.sidebar.success("PDF index rebuilt!")
+    with st.sidebar.expander("PDF"):
+        # RAG PDF upload
+        up = st.file_uploader("Upload PDFs for lore", accept_multiple_files=True, type="pdf")
+        if up:
+            with st.spinner("Building Index", show_time=True):
+                #time.sleep(5)
+                for f in up:
+                    dst = settings.pdf_folder / f.name
+                    dst.write_bytes(f.getbuffer())
+                    chromadb_client.embed_pdf(dst)
+            st.success("PDF index built!")
 
     st.title("🗡️ Virtual Game Master")
 

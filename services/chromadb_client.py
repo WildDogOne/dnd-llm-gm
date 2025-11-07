@@ -4,8 +4,9 @@ from haystack import Document
 from haystack import Pipeline
 from haystack.components.embedders import SentenceTransformersDocumentEmbedder
 from haystack.components.embedders import SentenceTransformersTextEmbedder
-from haystack.components.preprocessors import DocumentPreprocessor
-
+from haystack.components.preprocessors import DocumentPreprocessor, DocumentCleaner, DocumentSplitter
+from haystack.components.converters import PyPDFToDocument
+from haystack.components.writers import DocumentWriter
 from core.settings import settings
 from typing import List, Dict
 from .ollama_client import ollama_client
@@ -59,5 +60,17 @@ class ChromadbClient:
                 outputs.append(result.content)
         return outputs
 
-
+    def embed_pdf(self, pdf):
+       print(pdf)
+       #converter = PyPDFToDocument()
+       #docs = converter.run(sources=[pdf])
+       pipeline = Pipeline()
+       pipeline.add_component("converter", PyPDFToDocument())
+       pipeline.add_component("cleaner", DocumentCleaner())
+       pipeline.add_component("splitter", DocumentSplitter(split_by="sentence", split_length=5))
+       pipeline.add_component("writer", DocumentWriter(document_store=self.document_store))
+       pipeline.connect("converter", "cleaner")
+       pipeline.connect("cleaner", "splitter")
+       pipeline.connect("splitter", "writer")
+       pipeline.run({"converter": {"sources": [str(pdf)]}})
 chromadb_client = ChromadbClient()
