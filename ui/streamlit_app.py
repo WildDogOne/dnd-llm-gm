@@ -1,8 +1,8 @@
 import os, sys, logging, pickle
-#import torch;
+# import torch;
 from pathlib import Path
 
-#torch.classes.__path__ = []  # avoid Streamlit watcher errors
+# torch.classes.__path__ = []  # avoid Streamlit watcher errors
 
 import streamlit as st
 
@@ -11,9 +11,8 @@ sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
 from core.settings import settings
 from services.game_runner import GameRunner
-from core.utils import build_index
+#from core.utils import build_index
 from services.chromadb_client import chromadb_client
-from services.ollama_client import ollama_client
 
 logger = logging.getLogger(__name__)
 st.set_page_config(page_title="AI Game Master", layout="wide")
@@ -100,6 +99,8 @@ def main():
         if os.path.exists(party_file) and not runner.party:
             runner.party = load_game_state(party_file)
         st.session_state.loaded = True
+
+    ## Sidebar
     # Create a question bar that is always present
     st.sidebar.title("Ask DM")
     question = st.sidebar.text_input("Enter your question:")
@@ -124,13 +125,14 @@ def main():
             st.write("Game state deleted.")
 
     # RAG PDF upload
-    up = st.sidebar.file_uploader("Upload PDFs for lore", accept_multiple_files=True, type="pdf")
-    if up:
-        for f in up:
-            dst = settings.pdf_folder / f.name
-            dst.write_bytes(f.getbuffer())
-        build_index()
-        st.sidebar.success("PDF index rebuilt!")
+    # TODO: Rewrite the whole thing
+    ##up = st.sidebar.file_uploader("Upload PDFs for lore", accept_multiple_files=True, type="pdf")
+    ##if up:
+    ##    for f in up:
+    ##        dst = settings.pdf_folder / f.name
+    ##        dst.write_bytes(f.getbuffer())
+    ##    build_index()
+    ##    st.sidebar.success("PDF index rebuilt!")
 
     st.title("🗡️ Virtual Game Master")
 

@@ -29,7 +29,6 @@ jsonschema
 nltk
 pydantic-settings
 pydantic
-# TODO: Remove after PDF RAG Rebuild
-hnswlib
-numpy
-pdfplumber
+#hnswlib
+#numpy
+#pdfplumber
