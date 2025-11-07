@@ -129,9 +129,13 @@ def main():
 
     # Phase: ready to start
     if gs.phase == "start" and runner.party:
+        custom_intro = st.text_area(
+            "Enter your custom intro text and press start adventure. Or leave empty for a generated intro",
+            key="custom_intro_input")
+
         if st.button("🐉 Start Adventure"):
             try:
-                runner.start_adventure()
+                runner.start_adventure(custom_intro)
                 save_game_state(game_state=gs)
                 if runner.party:
                     save_game_state(party=runner.party)

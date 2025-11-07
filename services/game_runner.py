@@ -25,10 +25,13 @@ class GameRunner:
         self.state = GameState(turn=0, phase="start")
         return self.party
 
-    def start_adventure(self) -> GameState:
+    def start_adventure(self, custom_intro) -> GameState:
         if not self.party:
             raise RuntimeError("Generate party first.")
-        intro = start_adventure_sync(self.party)
+        if not custom_intro:
+            intro = start_adventure_sync(self.party)
+        else:
+            intro = custom_intro
         self.state.turn = 1
         self.state.phase = "intro"
         self.state.intro_text = intro

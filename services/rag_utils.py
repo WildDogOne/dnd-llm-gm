@@ -36,7 +36,7 @@ CHAR_TEMP = 0.7
 
 DM_INTRO_PROMPT = (
     "SYSTEM: You are the Dungeon Master. "
-    "Describe a scene (200–300 words) and end with a clear challenge.\n"
+    "Describe a scene (300-400 words) and end with a vague challenge.\n"
     "USER: Start an epic adventure with: {names}."
 )
 DM_TURN_PROMPT = (
