@@ -36,12 +36,16 @@ class OllamaClient:
     def __init__(self):
         self.client = Client(
             host=settings.llm_host,
-            headers={'x-some-header': 'some-value'}
+            headers={'x-some-header': 'some-value'},
+
         )
 
     @_retry
     def structured(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None,
-             output_format=None) -> Any:
+                   output_format=None) -> Any:
+        if options is None:
+            options = {}
+        options.setdefault("num_ctx", settings.context_size)
         response = self.client.chat(model=settings.llm_model,
                                     messages=messages,
                                     stream=stream,
@@ -53,7 +57,8 @@ class OllamaClient:
     def chat(self, messages: List[Dict[str, Any]], stream: bool = False, options: dict = None,
              output_format=None) -> Any:
         llm = OllamaChatGenerator(
-            model=settings.llm_model, url=settings.llm_host, response_format=output_format
+            model=settings.llm_model, url=settings.llm_host, response_format=output_format,
+            generation_kwargs={"num_ctx": settings.context_size}
         )
         result = llm.run(messages)
         return result["replies"][0]._content[0].text
@@ -72,11 +77,12 @@ class OllamaClient:
                                     generation_kwargs={
                                         "num_predict": max_tokens,
                                         "temperature": temperature,
+                                        "num_ctx": settings.context_size
                                     })
 
         return generator.run(prompt)["replies"][0]
 
-    #def embed(self, inputs: List[str]) -> Any:
+    # def embed(self, inputs: List[str]) -> Any:
     #    response = self.client.embed(model=settings.llm_embedding_model, input=inputs)
     #    embeddings = response["embeddings"]
     #    return embeddings

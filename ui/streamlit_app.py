@@ -1,6 +1,7 @@
 import os, sys, logging
 import torch;
 
+
 torch.classes.__path__ = []  # avoid Streamlit watcher errors
 
 import streamlit as st
@@ -12,6 +13,7 @@ from core.settings import settings
 from services.game_runner import GameRunner
 from core.utils import build_index
 from services.chromadb_client import chromadb_client
+from services.ollama_client import ollama_client
 
 logger = logging.getLogger(__name__)
 st.set_page_config(page_title="AI Game Master", layout="wide")
@@ -56,11 +58,24 @@ def display_log(story):
 
 
 def main():
-    st.sidebar.title("TD-LLM-DND Settings")
-    st.sidebar.write(f"- **Ollama Host:** `{settings.llm_host}`")
-    st.sidebar.write(f"- **Model:** `{settings.llm_model}`")
-    st.sidebar.write(f"- **Turn Limit:** {settings.turn_limit}")
-    st.sidebar.write(f"- **RAG:** {settings.enable_rag}")
+    # init runner
+    if "runner" not in st.session_state:
+        st.session_state.runner = GameRunner()
+    runner: GameRunner = st.session_state.runner
+    gs = runner.state
+
+    # Create a question bar that is always present
+    st.sidebar.title("Ask DM")
+    question = st.sidebar.text_input("Enter your question:")
+    if st.sidebar.button("Ask DM"):
+        result = runner.ask_dm(question)
+        st.sidebar.markdown(result)
+    with st.sidebar.expander("Settings"):
+        # st.sidebar.title("TD-LLM-DND Settings")
+        st.write(f"- **Ollama Host:** `{settings.llm_host}`")
+        st.write(f"- **Model:** `{settings.llm_model}`")
+        st.write(f"- **Turn Limit:** {settings.turn_limit}")
+        st.write(f"- **RAG:** {settings.enable_rag}")
 
     # RAG PDF upload
     up = st.sidebar.file_uploader("Upload PDFs for lore", accept_multiple_files=True, type="pdf")
@@ -71,13 +86,7 @@ def main():
         build_index()
         st.sidebar.success("PDF index rebuilt!")
 
-    # init runner
-    if "runner" not in st.session_state:
-        st.session_state.runner = GameRunner()
-    runner: GameRunner = st.session_state.runner
-    gs = runner.state
-
-    st.title("🗡️ TD-LLM-DND Adventure")
+    st.title("🗡️ Virtual Game Master")
 
     # Phase: start → new party
     if gs.phase == "start":

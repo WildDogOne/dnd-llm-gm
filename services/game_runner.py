@@ -7,6 +7,7 @@ from services.rag_utils import (
     start_adventure_sync,
     generate_options_sync,
     dm_turn_sync,
+    ask_dm_sync
 )
 from services.chromadb_client import chromadb_client
 
@@ -19,7 +20,7 @@ class GameRunner:
         self.state: GameState = GameState()
 
     def new_party(self) -> Dict[str, object]:
-        #chromadb_client.clear_collection()
+        # chromadb_client.clear_collection()
         self.party = generate_party_sync()
         self.state = GameState(turn=0, phase="start")
         return self.party
@@ -63,5 +64,9 @@ class GameRunner:
         chromadb_client.embed(dm_text, f"dm_turn_{self.state.turn}")
         self.state.story.append(f"DM: {dm_text}")
         self.state.turn += 1
-        # stay in dm_response until UI moves back to request_options()
         return self.state
+
+    def ask_dm(self, question: str) -> str:
+        answer = ask_dm_sync(self.state.__dict__, question)
+        chromadb_client.embed(answer, "answer_to_player_question")
+        return answer

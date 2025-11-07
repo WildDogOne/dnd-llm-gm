@@ -10,6 +10,7 @@ from core.utils import last_sentences
 from services.ollama_client import ollama_client
 from core.settings import settings
 from .chromadb_client import chromadb_client
+from haystack.dataclasses import ChatMessage
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,7 @@ DM_TURN_PROMPT = (
     "summarizing what happened and presenting the next challenge.\n"
     "USER: {context}"
 )
+
 DM_MAX = 3000
 DM_TEMP = 0.8
 
@@ -61,6 +63,15 @@ PLAYER_PROMPT = (
 )
 PLAYER_MAX = 150
 PLAYER_TEMP = 0.6
+
+
+def dm_question_prompt(question: str = None, context: str = None) -> dict:
+    return [
+        ChatMessage.from_system(
+            "\nSYSTEM: You are the Dungeon Master. You answer your players questions truthfully without giving away too much information."),
+        ChatMessage.from_user(
+            f"Player Question {question}\nContext: {context}")
+    ]
 
 
 def create_options_prompt(context):
@@ -78,6 +89,7 @@ def create_options_prompt(context):
                 f"Given recent events, output exactly 3 possible action options as a JSON array.\n{context}")
         ]
     """
+
 
 OPTIONS_MAX = 150
 OPTIONS_TEMP = 0.6
@@ -135,6 +147,18 @@ def player_turn_sync(state: Dict, name: str, info: Character) -> str:
         ctxt = f"Character: {info.model_dump_json()}\nRecent: {recent}"
     prompt = PLAYER_PROMPT.format(context=ctxt)
     return ollama_client.generate(prompt=prompt, max_tokens=PLAYER_MAX, temperature=PLAYER_TEMP)
+
+
+def ask_dm_sync(state: Dict, question: str) -> str:
+    recent = last_sentences(" ".join(state["story"]), 10)
+    lore = chromadb_client.retrieve(recent)
+    if lore:
+        ctxt = f"Recent events: {recent}\nAdditional Backstory: {' | '.join(lore)}"
+    else:
+        ctxt = f"Recent events: {recent}"
+    prompt = dm_question_prompt(question=question, context=ctxt)
+    answer = ollama_client.chat(messages=prompt, options={"max_tokens": 2000, "temperature": 0.8})
+    return answer
 
 
 def dm_turn_sync(state: Dict) -> str:
