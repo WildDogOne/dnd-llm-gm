@@ -38,7 +38,7 @@ class ChromadbClient:
         docs_with_embeddings = doc_embedder.run(docs["documents"])
         self.document_store.write_documents(docs_with_embeddings["documents"])
 
-    def retrieve(self, question: str) -> List[Dict]:
+    def retrieve(self, question: str, question_prompt: str = None) -> List[Dict]:
 
         text_embedder = SentenceTransformersTextEmbedder(
             model="sentence-transformers/all-MiniLM-L6-v2"

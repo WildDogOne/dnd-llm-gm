@@ -150,8 +150,8 @@ def player_turn_sync(state: Dict, name: str, info: Character) -> str:
 
 
 def ask_dm_sync(state: Dict, question: str) -> str:
-    recent = last_sentences(" ".join(state["story"]), 10)
-    lore = chromadb_client.retrieve(recent)
+    recent = last_sentences(" ".join(state["story"]), 50)
+    lore = chromadb_client.retrieve(question)
     if lore:
         ctxt = f"Recent events: {recent}\nAdditional Backstory: {' | '.join(lore)}"
     else:
