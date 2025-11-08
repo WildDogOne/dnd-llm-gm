@@ -8,16 +8,24 @@ This is a fork of https://github.com/tegridydev/dnd-llm-game but it starts to fe
 - **Start New Adventure**: Begin a new adventure with the generated characters
 - **Turn-Based Gameplay**: Progress through the adventure with player and Dungeon Master turns
 
+## TODOs
+- Add Tools
+  - Dice Rolling
+  - Shopping
+  - Character Management
+
 ## Requirements
 
-- Python 3.8+
-- Haystack
-- Streamlit
-- Requests
-- LangChain
-- HuggingFace Transformers
-- dotenv
-- chromadb
+- streamlit~=1.51.0
+- ollama~=0.6.0
+- haystack-ai~=2.19.0
+- datasets~=4.4.1
+- sentence-transformers~=
+- ollama-haystack~=5.3.0
+- chroma-haystack~=3.4.0
+- jsonschema~=4.25.1
+- pydantic-settings~=2.11.0
+- pydantic~=2.12.4 - pypdf~=6.1.3
 
 ## Installation
 
@@ -71,8 +79,9 @@ This is a fork of https://github.com/tegridydev/dnd-llm-game but it starts to fe
 ## How to Play
 
 1. Generate a new party.
-2. Start a new adventure.
-3. Play the next turn.
+1. (Optional) Upload PDF(s) of the adventure you want to play
+1. Start a new adventure. (Or write your own intro)
+1. Play
 
 May your dice roll high!
 
