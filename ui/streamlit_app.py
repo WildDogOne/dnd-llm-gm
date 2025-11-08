@@ -71,11 +71,13 @@ def main():
 
     ## Sidebar
     # Create a question bar that is always present
-    st.sidebar.title("Ask DM")
-    question = st.sidebar.chat_input("Enter your question:")
-    if question:
-        result = runner.ask_dm(question)
-        st.sidebar.markdown(result)
+    with st.sidebar:
+        st.title("Ask DM")
+        question = st.chat_input("Enter your question:")
+        if question:
+            with st.spinner("Loading answer", show_time=True):
+                result = runner.ask_dm(question)
+            st.sidebar.markdown(result)
     with st.sidebar.expander("Settings"):
         st.markdown(f"- **Ollama Host:** `{settings.llm_host}`\n"
                     f"- **Model:** `{settings.llm_model}`\n"

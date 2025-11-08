@@ -24,8 +24,11 @@ class ChromadbClient:
     def __init__(self) -> None:
         self.document_store = ChromaDocumentStore(persist_path=settings.chromadb_folder)
 
+    def get_document_count(self):
+        return self.document_store.count_documents()
+
     def reset_store(self):
-        if self.document_store.count_documents() > 0:
+        if self.get_document_count() > 0:
             self.document_store.delete_all_documents()
 
     def embed(self, text: str, step) -> None:
@@ -58,19 +61,23 @@ class ChromadbClient:
         if results:
             for result in results["retriever"]["documents"]:
                 outputs.append(result.content)
+                if len(outputs) > 5:
+                    break
         return outputs
 
     def embed_pdf(self, pdf):
-       print(pdf)
-       #converter = PyPDFToDocument()
-       #docs = converter.run(sources=[pdf])
-       pipeline = Pipeline()
-       pipeline.add_component("converter", PyPDFToDocument())
-       pipeline.add_component("cleaner", DocumentCleaner())
-       pipeline.add_component("splitter", DocumentSplitter(split_by="sentence", split_length=5))
-       pipeline.add_component("writer", DocumentWriter(document_store=self.document_store))
-       pipeline.connect("converter", "cleaner")
-       pipeline.connect("cleaner", "splitter")
-       pipeline.connect("splitter", "writer")
-       pipeline.run({"converter": {"sources": [str(pdf)]}})
+        print(pdf)
+        # converter = PyPDFToDocument()
+        # docs = converter.run(sources=[pdf])
+        pipeline = Pipeline()
+        pipeline.add_component("converter", PyPDFToDocument())
+        pipeline.add_component("cleaner", DocumentCleaner())
+        pipeline.add_component("splitter", DocumentSplitter(split_by="sentence", split_length=5))
+        pipeline.add_component("writer", DocumentWriter(document_store=self.document_store))
+        pipeline.connect("converter", "cleaner")
+        pipeline.connect("cleaner", "splitter")
+        pipeline.connect("splitter", "writer")
+        pipeline.run({"converter": {"sources": [str(pdf)]}})
+
+
 chromadb_client = ChromadbClient()

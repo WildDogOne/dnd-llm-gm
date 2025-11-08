@@ -35,8 +35,9 @@ CHAR_MAX = 200
 CHAR_TEMP = 0.7
 
 DM_INTRO_PROMPT = (
-    "SYSTEM: You are the Dungeon Master. "
-    "Describe a scene (300-400 words) and end with a vague challenge.\n"
+    "SYSTEM: You are the Dungeon Master (DM). "
+    "Describe a scene (300-400 words) and end with a challenge.\n"
+    "Make sure to always reply in character of the DM.\n"
     "USER: Start an epic adventure with: {names}."
 )
 DM_TURN_PROMPT = (
@@ -59,9 +60,11 @@ PLAYER_TEMP = 0.6
 def dm_question_prompt(question: str = None, context: str = None) -> dict:
     return [
         ChatMessage.from_system(
-            "\nSYSTEM: You are the Dungeon Master. You answer your players questions truthfully without giving away too much information."),
+            "\nYou are the Dungeon Master. You answer your players questions truthfully without giving away too much information."),
         ChatMessage.from_user(
-            f"Player Question {question}\nContext: {context}")
+            f"We have a question, DM can you answer us?\n"
+            f"The question: {question}\n"
+            f"Context information that might help answer the question: {context}")
     ]
 
 
@@ -121,6 +124,9 @@ def generate_party_sync() -> Dict[str, Character]:
 def start_adventure_sync(party: Dict[str, Character]) -> str:
     names = ", ".join(party.keys())
     prompt = DM_INTRO_PROMPT.format(names=names)
+    if chromadb_client.get_document_count() > 0:
+        response = chromadb_client.retrieve("Get an overview or intro for the story")
+        prompt += f"\nContext Information: \n\n{response}"
     return ollama_client.generate(
         prompt=prompt,
         max_tokens=DM_MAX,
@@ -141,7 +147,7 @@ def player_turn_sync(state: Dict, name: str, info: Character) -> str:
 
 
 def ask_dm_sync(state: Dict, question: str) -> str:
-    recent = last_sentences(" ".join(state["story"]), 50)
+    recent = last_sentences(" ".join(state["story"]), 10)
     lore = chromadb_client.retrieve(question)
     if lore:
         ctxt = f"Recent events: {recent}\nAdditional Backstory: {' | '.join(lore)}"
